@@ -2,8 +2,8 @@ export const restaurant: { name: string; address: string | null; hours: string |
   name: 'REX', address: null, hours: null, phone: null, email: null, bookingUrl: null,
 };
 export const photos = {
-  garden: { src: '/images/materia.webp', alt: 'Couve, espargos e batatas numa composição de ingredientes', author: 'Toa Heftiba', url: 'https://unsplash.com/photos/green-cabbage-and-brown-potato-T87aXDZD6RQ' },
-  sea: { src: '/images/mar.webp', alt: 'Pormenor de sardinhas prateadas num mercado', author: 'Romeio Paul', url: 'https://unsplash.com/photos/a-pile-of-fish-7CDmNCJdcc8' },
+  garden: { src: '/Restaurante-Rex/images/materia.webp', alt: 'Couve, espargos e batatas numa composição de ingredientes', author: 'Toa Heftiba', url: 'https://unsplash.com/photos/green-cabbage-and-brown-potato-T87aXDZD6RQ' },
+  sea: { src: '/Restaurante-Rex/images/mar.webp', alt: 'Pormenor de sardinhas prateadas num mercado', author: 'Romeio Paul', url: 'https://unsplash.com/photos/a-pile-of-fish-7CDmNCJdcc8' },
 };
 export type Dish = { name: string; ingredients?: string; price?: string };
 export const menu: { category: string; dishes: Dish[] }[] = [
