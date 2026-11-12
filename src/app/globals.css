@@ -192,3 +192,26 @@ footer { background: var(--ink); color: var(--paper); padding: 32px 3% 20px; }
   .menu-category { break-inside: avoid; }
   .menu-category h4 { font-size: 16px; }
 }
+/* Furna: restrained type scale and selectable, persistent colour systems. */
+:root,[data-palette="mineral"]{--ink:#292b29;--paper:#f5f2eb;--acid:#d9d2c5;--line:#292b2940}
+[data-palette="atlantico"]{--ink:#193d50;--paper:#f5f3eb;--acid:#d3e1e3;--line:#193d5040}
+[data-palette="olival"]{--ink:#304534;--paper:#f4f1e7;--acid:#d9dfca;--line:#30453440}
+[data-palette="barro"]{--ink:#703b2c;--paper:#faf1e6;--acid:#e5c8b4;--line:#703b2c40}
+body{font-family:'Segoe UI',Arial,sans-serif}
+.wordmark{font-size:clamp(90px,14vw,220px);font-weight:400;letter-spacing:-.065em;transform:none;margin:35px 0 28px;line-height:1.05}
+.small-logo{font-size:32px;font-weight:400;letter-spacing:-1.5px}
+.opening-line{font-size:clamp(26px,2.6vw,42px);letter-spacing:-.035em;line-height:1.2}
+.pairing-title{font-size:clamp(35px,5.2vw,78px);letter-spacing:-.04em;line-height:1.15}
+.menu-heading h2{font-size:clamp(48px,6vw,84px);letter-spacing:-.045em;line-height:1.05}
+.menu-category h3{font-size:34px;letter-spacing:-1px}.menu-category h4{font-size:21px;letter-spacing:-.3px}
+.visit-heading h2{font-size:clamp(72px,10vw,145px);letter-spacing:-.05em}
+.palette-control{display:flex;align-items:center;justify-content:flex-end;gap:14px;padding:12px 3%;background:var(--paper);border-bottom:1px solid var(--line);font-size:13px}
+.palette-control select{font:inherit;color:var(--ink);background:var(--paper);border:1px solid var(--line);padding:10px;max-width:100%;min-height:44px}
+@media(max-width:700px){.wordmark{font-size:29vw;margin:22px 0;letter-spacing:-.06em}.opening-line{font-size:27px}.menu-heading h2{font-size:54px}.menu-category h3{font-size:29px}.pairing-title{font-size:8vw}.topbar nav{gap:14px;flex-wrap:wrap}.palette-control{padding:10px 5%;flex-wrap:wrap;justify-content:space-between}.palette-control select{font-size:12px}.visit-heading h2{font-size:22vw}}
+.booking-section{padding:65px 6%;background:var(--paper);border-top:1px solid var(--line)}
+.booking-section h2{font:400 clamp(40px,5vw,68px)/1.1 Georgia,serif;margin:20px 0;letter-spacing:-2px}
+.booking-section>p{font-size:15px;line-height:1.6;max-width:740px}.booking-status{padding:16px;border:1px solid var(--line);margin:25px 0}
+.booking-fields{display:grid;grid-template-columns:1fr 1fr;gap:22px}.booking-section label{display:flex;flex-direction:column;gap:9px;font-size:14px;line-height:1.4}
+.booking-section input,.booking-section select,.booking-section textarea{font:inherit;padding:12px;border:1px solid var(--line);background:var(--paper);color:var(--ink);width:100%;min-height:46px;border-radius:0}
+.booking-section .booking-check{flex-direction:row;align-items:center}.booking-check input{width:20px;min-height:20px}.booking-message{margin-top:24px}.booking-section form>p{font-size:12px;line-height:1.6;margin:18px 0}.booking-section button{padding:15px 20px;border:1px solid var(--line);background:var(--acid);color:var(--ink);cursor:not-allowed}.booking-section textarea{resize:vertical}
+@media(max-width:600px){.booking-fields{grid-template-columns:1fr}.booking-section{padding:45px 5%}}

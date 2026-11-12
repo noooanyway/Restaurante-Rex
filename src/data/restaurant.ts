@@ -1,5 +1,5 @@
 export const restaurant: { name: string; address: string | null; hours: string | null; phone: string | null; email: string | null; bookingUrl: string | null } = {
-  name: 'REX', address: null, hours: null, phone: null, email: null, bookingUrl: null,
+  name: 'Furna', address: 'Ladeira de Santo António, 9940-207 Santo António', hours: 'Terça-feira a domingo: 12:00–15:00 e 19:00–22:00. Segunda-feira encerrado.', phone: '925 204 024', email: null, bookingUrl: null,
 };
 export const photos = {
   garden: { src: '/Restaurante-Rex/images/materia.webp', alt: 'Couve, espargos e batatas numa composição de ingredientes', author: 'Toa Heftiba', url: 'https://unsplash.com/photos/green-cabbage-and-brown-potato-T87aXDZD6RQ' },

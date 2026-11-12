@@ -1,0 +1,4 @@
+'use client';
+import {useEffect,useState} from 'react';
+const palettes=[['mineral','Mineral · areia e carvão'],['atlantico','Atlântico · azul e marfim'],['olival','Olival · verde e linho'],['barro','Barro · terracota e creme']];
+export default function PaletteSelector(){const [value,setValue]=useState('mineral');useEffect(()=>{try{const saved=localStorage.getItem('furna-palette');if(saved&&palettes.some(([id])=>id===saved)){setValue(saved);document.documentElement.dataset.palette=saved;}}catch{}},[]);function change(v:string){setValue(v);document.documentElement.dataset.palette=v;try{localStorage.setItem('furna-palette',v)}catch{}}return <div className="palette-control"><label htmlFor="palette">Paleta de cores</label><select id="palette" value={value} onChange={e=>change(e.target.value)}>{palettes.map(([id,label])=><option key={id} value={id}>{label}</option>)}</select><span role="status" className="sr-only">Paleta {value}</span></div>}
