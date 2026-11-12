@@ -1,14 +1,51 @@
 import Image from 'next/image';
 import Menu from '@/components/Menu';
-import { restaurant as r, photos } from '@/data/restaurant';
-function Rosette({className=''}:{className?:string}) {return <svg className={className} viewBox="0 0 100 100" fill="none" aria-hidden="true">{Array.from({length:12},(_,i)=><ellipse key={i} cx="50" cy="50" rx="16" ry="45" stroke="currentColor" strokeWidth=".8" transform={`rotate(${i*15} 50 50)`}/>)}<circle cx="50" cy="50" r="7" fill="currentColor"/></svg>}
-export default function Home(){return <>
- <a href="#conteudo" className="skip-link">Saltar para o conteúdo</a>
- <header className="topbar flex items-center justify-between"><a className="small-logo" href="#inicio" aria-label={`${r.name} — início`}>{r.name}</a><nav aria-label="Navegação principal" className="flex items-center gap-6"><a href="#conceito">A ideia</a><a href="#ementa">Ementa</a><a href="#visitar">À mesa <span aria-hidden="true">↗</span></a></nav><span className="header-note">COZINHA EM ESTADO VIVO</span></header>
- <main id="conteudo"><section className="hero" id="inicio" aria-labelledby="hero-title"><div className="hero-meta"><span>PRODUTO PORTUGUÊS. ESPÍRITO LIVRE.</span><span>RESTAURANTE / {r.name}</span></div><h1 className="wordmark" id="hero-title">{r.name}</h1><div className="hero-bottom"><div className="hero-statement"><p>O familiar.<br/><em>O inesperado.</em></p><a href="#ementa" className="text-link">O que vai à mesa <span>↗</span></a></div><figure className="hero-image"><Image src={photos.garden.src} alt={photos.garden.alt} width={1400} height={1000} priority sizes="(max-width: 700px) 90vw, 55vw"/><figcaption><span>01 — MATÉRIA-PRIMA</span><span>ESTUDO VISUAL</span></figcaption><div className="photo-stamp" aria-hidden="true">DEIXAR<br/>A NATUREZA<br/><em>acontecer.</em></div></figure><div className="hero-aside"><Rosette/><span>DA TERRA<br/>À TRANSFORMAÇÃO</span></div></div><a className="scroll-cue" href="#conceito">CONTINUA A DESCOBRIR <span>↓</span></a></section>
- <section id="conceito" className="concept section-pad"><div className="section-label"><span>01 / A IDEIA</span><Rosette/></div><div><h2>A natureza dá.<br/>A curiosidade<br/><em>transforma.</em></h2><div className="concept-copy"><p>Começamos pelo que está perto. Ingredientes portugueses, sabores que reconhecemos, matéria com carácter.</p><p>Depois, damos espaço ao inesperado. À acidez de uma fermentação. Ao encontro do mar com a terra. Ao tempo que muda a textura e o sabor.</p><p>É nesse intervalo entre memória e descoberta que se cozinha no {r.name}.</p></div></div></section>
- <section className="matter" aria-labelledby="matter-title"><div className="matter-title"><span>UM VOCABULÁRIO DE SABORES</span><h2 id="matter-title">Sal. Terra.<br/><em>Tempo.</em></h2></div><figure className="sea-image"><Image src={photos.sea.src} alt={photos.sea.alt} width={1000} height={1200} sizes="(max-width:700px) 90vw, 47vw"/><figcaption>02 — O MAR / ESTUDO VISUAL</figcaption></figure><div className="matter-note"><span className="asterisk" aria-hidden="true">✳</span><p>Uma laranja fermentada.<br/>Um queijo que se torna sobremesa.<br/>Uma combinação que fica.</p><a href="#ementa" className="text-link">Explorar a ementa <span>↗</span></a></div><p className="photo-disclaimer">Fotografias de inspiração. Não representam pratos ou espaços do {r.name}.</p></section>
- <section id="ementa" className="menu-section section-pad"><div className="menu-heading"><span className="eyebrow">02 / À MESA</span><h2>A ementa<span aria-hidden="true">↙</span></h2><p>Para começar, partilhar,<br/>descobrir e voltar.</p></div><Menu/></section>
- <section id="visitar" className="visit section-pad"><div className="visit-intro"><span className="eyebrow">03 / O ENCONTRO</span><h2>O próximo<br/>capítulo é<br/><em>à mesa.</em></h2><Rosette/></div><div className="visit-details"><h3>Visitar o {r.name}</h3><dl><div><dt>ONDE</dt><dd>{r.address||'Morada a anunciar.'}</dd></div><div><dt>QUANDO</dt><dd>{r.hours||'Horários a anunciar.'}</dd></div><div><dt>CONTACTOS</dt><dd>{r.phone&&<a href={`tel:${r.phone.replace(/\s/g,'')}`}>{r.phone}</a>}{r.email&&<a href={`mailto:${r.email}`}>{r.email}</a>}{!r.phone&&!r.email?'Contactos disponíveis em breve.':null}</dd></div></dl>{r.bookingUrl?<a className="reservation" href={r.bookingUrl}>Reservar uma mesa ↗</a>:<div className="reservation"><span>Reservas</span><span className="availability">EM BREVE</span></div>}<p className="booking-note">{r.bookingUrl?'Consulte a disponibilidade no sistema de reservas.':'As reservas ainda não estão disponíveis. Os detalhes serão anunciados aqui.'}</p></div></section>
- </main><footer><div className="footer-line"><a href="#inicio" className="small-logo">{r.name}</a><p>COZINHA CONTEMPORÂNEA.<br/>MATÉRIA EM TRANSFORMAÇÃO.</p><a href="#inicio">Voltar ao início ↑</a></div><details className="credits"><summary>Créditos fotográficos</summary><p>Imagens provisórias por <a href={photos.garden.url}>Toa Heftiba</a> e <a href={photos.sea.url}>Romeio Paul</a>, via Unsplash. Utilizadas ao abrigo da <a href="https://unsplash.com/license">licença Unsplash</a>.</p></details></footer>
- </>}
+import { restaurant as r, photos, menu } from '@/data/restaurant';
+
+const pairing = menu[1].dishes[2];
+export default function Home() {
+  return <>
+    <a href="#conteudo" className="skip-link">Saltar para o conteúdo</a>
+    <header className="topbar">
+      <a href="#inicio" className="small-logo" aria-label={`${r.name} — início`}>{r.name}</a>
+      <span className="header-note">RESTAURANTE<br />COZINHA CONTEMPORÂNEA</span>
+      <nav aria-label="Navegação principal" className="flex items-center"><a href="#conceito">A ideia</a><a href="#ementa">Ementa</a><a href="#visitar">Visitar</a></nav>
+    </header>
+    <main id="conteudo">
+      <section className="opening" id="inicio" aria-labelledby="hero-title">
+        <div className="opening-type">
+          <p className="eyebrow">INGREDIENTES PORTUGUESES.<br />RELAÇÕES IMPROVÁVEIS.</p>
+          <h1 id="hero-title" className="wordmark">{r.name}</h1>
+          <p className="opening-line">O sabor não anda<br />em linha reta.</p>
+          <a className="menu-entry" href="#ementa"><span>Sentar.<br />Escolher.</span><span aria-hidden="true">↳</span><span>Ver a ementa</span></a>
+        </div>
+        <figure className="opening-photo">
+          <Image src={photos.garden.src} alt={photos.garden.alt} width={1400} height={2100} priority sizes="(max-width: 700px) 100vw, 50vw" />
+          <figcaption><span>MATÉRIA, ANTES DE SER PRATO.</span><span>ESTUDO FOTOGRÁFICO — 01</span></figcaption>
+        </figure>
+        <p className="opening-footnote">Uma cozinha que começa no produto<br />e continua na curiosidade.</p>
+        <a className="opening-index" href="#conceito">O QUE NOS MOVE <span aria-hidden="true">↓</span></a>
+      </section>
+      <section id="conceito" className="relations">
+        <div className="section-top"><span className="eyebrow">01 / A IDEIA</span><span className="eyebrow">UMA COMBINAÇÃO DA NOSSA EMENTA</span></div>
+        <h2 className="pairing-title"><span>{pairing.name}</span>{pairing.ingredients?.split(' | ').map(ingredient => <span key={ingredient}><b aria-hidden="true">×</b>{ingredient}</span>)}</h2>
+        <div className="relations-bottom"><p className="relations-caption">Três ingredientes.<br />Outra conversa.</p><div className="concept-copy"><p>A morcela encontra a acidez da laranja fermentada e o amargo do chocolate negro. O queijo de São Jorge passa do couvert para o creme de um Paris-Brest.</p><p>No {r.name}, trabalhamos ingredientes portugueses com fermentações e técnicas contemporâneas. Interessa-nos o que acontece entre sabores: o contraste, a textura, a surpresa.</p></div></div>
+      </section>
+      <section className="interlude" aria-labelledby="interlude-title">
+        <figure className="sea-photo"><Image src={photos.sea.src} alt={photos.sea.alt} width={1000} height={1200} sizes="(max-width: 700px) 100vw, 56vw" /><figcaption>ESTUDO FOTOGRÁFICO — 02 / MAR</figcaption></figure>
+        <div className="interlude-copy"><span className="eyebrow">PRODUTO → TRANSFORMAÇÃO → MESA</span><h2 id="interlude-title">Dar tempo<br />ao sabor.</h2><p>Curar. Fermentar. Assar.<br />Mudar a matéria, descobrir<br />o que já estava lá.</p><a className="line-link" href="#ementa">Descobrir os pratos <span aria-hidden="true">↓</span></a></div>
+        <p className="photo-disclaimer">Fotografias de inspiração. Não representam pratos ou espaços do {r.name}.</p>
+      </section>
+      <section id="ementa" className="menu-section"><div className="menu-heading"><span className="eyebrow">02 / A EMENTA</span><h2>O que vai<br />à mesa.</h2><p>Do primeiro ao último sabor.</p></div><Menu /></section>
+      <section id="visitar" className="visit">
+        <div className="visit-heading"><span className="eyebrow">03 / VISITAR O {r.name}</span><h2>À mesa.</h2></div>
+        <div className="visit-body"><p className="visit-note">O lugar do próximo<br />encontro.</p><div className="visit-details">
+          <dl><div><dt>ONDE</dt><dd>{r.address || 'Morada a anunciar.'}</dd></div><div><dt>QUANDO</dt><dd>{r.hours || 'Horários a anunciar.'}</dd></div><div><dt>CONTACTOS</dt><dd>{r.phone && <a href={`tel:${r.phone.replace(/\s/g, '')}`}>{r.phone}</a>}{r.email && <a href={`mailto:${r.email}`}>{r.email}</a>}{!r.phone && !r.email && 'Contactos disponíveis em breve.'}</dd></div></dl>
+          {r.bookingUrl ? <a className="reservation" href={r.bookingUrl}>Reservar uma mesa <span aria-hidden="true">↗</span></a> : <div className="reservation"><span>Reservas</span><span className="availability">EM BREVE</span></div>}
+          <p className="booking-note">{r.bookingUrl ? 'Consulte a disponibilidade no sistema de reservas.' : 'As reservas ainda não estão disponíveis. Os detalhes serão anunciados aqui.'}</p>
+        </div></div>
+      </section>
+    </main>
+    <footer><div className="footer-line"><a href="#inicio" className="small-logo">{r.name}</a><p>INGREDIENTES PORTUGUESES.<br />RELAÇÕES IMPROVÁVEIS.</p><a href="#inicio">Voltar ao início ↑</a></div><details className="credits"><summary>Fotografia e créditos</summary><p>Imagens provisórias por <a href={photos.garden.url}>Toa Heftiba</a> e <a href={photos.sea.url}>Romeio Paul</a>, via Unsplash. Utilizadas ao abrigo da <a href="https://unsplash.com/license">licença Unsplash</a>.</p></details></footer>
+  </>;
+}

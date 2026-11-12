@@ -20,9 +20,9 @@ Abrir http://127.0.0.1:3000. Para produção: `npm run build`; publicar a pasta 
 - `src/app/globals.css`: direção visual, composição e adaptações responsivas.
 - `src/app/layout.tsx`: metadados. A versão provisória tem `noindex`; rever para a publicação oficial após confirmar nome e dados do restaurante.
 
-## Direção artística
+## Direção artística — iteração 2
 
-Um caderno de matéria: azul-cobalto e papel, letras de grande escala, imagens em folhas inclinadas e uma roseta desenhada em SVG como assinatura de transformação. Fotografia de ingredientes, sem sugerir um espaço ou pratos do REX que ainda não foram fotografados. Alternativas exploradas: linguagem botânica suave e ambiente cinematográfico escuro. A direção editorial escolhida distancia-se da referência PRADO.
+Amarelo ácido, tinta de tom beringela e papel. Abertura em dupla página, fotografia frontal e tipografia serifada. As relações entre ingredientes da ementa definem a narrativa. Índice lateral persistente em desktop e filtros com alvos táteis em mobile. Crítica e decisões documentadas em REVIEW-V2.md.
 
 ## Acessibilidade e manutenção
 
