@@ -15,7 +15,7 @@ http.createServer(async(req,res)=>{
  const origin=req.headers.origin;if(origin&&!allowed.includes(origin)){res.writeHead(403);return res.end();}if(origin)res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin');res.setHeader('Cache-Control','no-store');res.setHeader('Access-Control-Allow-Headers','Content-Type,Authorization');res.setHeader('Access-Control-Allow-Methods','GET,POST,PATCH,OPTIONS');
  const send=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify(data));};if(req.method==='OPTIONS'){res.writeHead(204);return res.end();}
  try{const url=new URL(req.url,'http://localhost');
- if(req.method==='GET'&&url.pathname==='/availability'){const date=url.searchParams.get('date')||'';return send(200,{slots:slots.filter(t=>valid(date,t)).map(time=>({time,tables:free(date,time).length,seats:free(date,time).reduce((n,t)=>n+t.seats,0)}))});}
+ if(req.method==='GET'&&url.pathname==='/availability'){const date=url.searchParams.get('date')||'';return send(200,{slots:slots.filter(t=>valid(date,t)).map(time=>({time,tables:free(date,time).length,seats:free(date,time).reduce((n,t)=>n+t.seats,0),layout:db.prepare('SELECT * FROM tables ORDER BY id').all().map(table=>({...table,state:free(date,time).some(t=>t.id===table.id)?'available':'reserved'}))}))});}
  let raw='';if(req.method!=='GET'){for await(const chunk of req){raw+=chunk;if(raw.length>12000)return send(413,{error:'Pedido demasiado grande.'});}}const data=raw?JSON.parse(raw):{};
  if(req.method==='POST'&&url.pathname==='/bookings'){
  const {date,time,name,phone,people,children=0,babies=0,chair=false,message=''}=data;

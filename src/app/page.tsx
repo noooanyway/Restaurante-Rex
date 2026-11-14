@@ -49,6 +49,6 @@ export default function Home() {
         </div></div>
       </section>
     </main>
-    <footer><div className="footer-line"><a href="#inicio" className="small-logo">{r.name}</a><p>INGREDIENTES PORTUGUESES.<br />RELAÇÕES IMPROVÁVEIS.</p><a href="#inicio">Voltar ao início ↑</a></div><details className="credits"><summary>Fotografia e créditos</summary><p>Imagens provisórias por <a href={photos.garden.url}>Toa Heftiba</a> e <a href={photos.sea.url}>Romeio Paul</a>, via Unsplash. Utilizadas ao abrigo da <a href="https://unsplash.com/license">licença Unsplash</a>.</p></details></footer>
+    <footer><div className="footer-line"><a href="#inicio" className="small-logo">{r.name}</a><p>INGREDIENTES PORTUGUESES.<br />RELAÇÕES IMPROVÁVEIS.</p><a href="#inicio">Voltar ao início ↑</a></div><div className="social-placeholders" aria-label="Redes sociais"><span>Segue a Furna</span><span>Instagram <small>Em breve</small></span><span>Facebook <small>Em breve</small></span></div><details className="credits"><summary>Fotografia e créditos</summary><p>Imagens provisórias por <a href={photos.garden.url}>Toa Heftiba</a> e <a href={photos.sea.url}>Romeio Paul</a>, via Unsplash. Utilizadas ao abrigo da <a href="https://unsplash.com/license">licença Unsplash</a>.</p></details></footer>
   </>;
 }
