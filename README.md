@@ -27,3 +27,6 @@ Amarelo ácido, tinta de tom beringela e papel. Abertura em dupla página, fotog
 ## Acessibilidade e manutenção
 
 HTML semântico, ligação para saltar conteúdo, foco visível, filtros com estado `aria-pressed`, anúncio da categoria selecionada, respeito por movimento reduzido e imagens com texto alternativo. A ementa completa está presente na renderização inicial. Sem bibliotecas de animação, rastreadores ou fontes externas.
+
+## Próximos passos
+Consultar [ROADMAP.md](ROADMAP.md) para o estado real do site, painel de gestão, frontend, backend e critérios de publicação das reservas.
