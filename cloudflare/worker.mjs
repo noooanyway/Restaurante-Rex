@@ -42,10 +42,10 @@ export default {
   const parsed=new Date(date+'T12:00:00Z');
   if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||Number.isNaN(parsed.getTime())||parsed.toISOString().slice(0,10)!==date)return send(400,{error:'Data inválida.'});
   if(parsed.getUTCDay()===1)return send(200,{slots:[]});
-  const [tableRows,bookings]=await env.DB.batch([env.DB.prepare('SELECT id,seats FROM dining_tables WHERE active=1 ORDER BY id'),env.DB.prepare("SELECT time,table_ids FROM reservations WHERE date=? AND (status='approved' OR (status='pending' AND expires_at>unixepoch()))").bind(date)]);
+  const [tableRows,bookings,blocks]=await env.DB.batch([env.DB.prepare('SELECT id,seats FROM dining_tables WHERE active=1 ORDER BY id'),env.DB.prepare("SELECT time,table_ids FROM reservations WHERE date=? AND (status='approved' OR (status='pending' AND expires_at>unixepoch()))").bind(date),env.DB.prepare('SELECT start,end FROM schedule_blocks WHERE date=?').bind(date)]);
   const times=['12:00','12:15','12:30','12:45','13:00','13:15','13:30','13:45','14:00','19:00','19:15','19:30','19:45','20:00','20:15','20:30','20:45','21:00'];
   const minutes=t=>Number(t.slice(0,2))*60+Number(t.slice(3));
-  const slots=times.map(time=>{const occupied=new Set();for(const booking of bookings.results){if(Math.abs(minutes(booking.time)-minutes(time))<60){let ids;try{ids=JSON.parse(booking.table_ids)}catch{throw new Error('Atribuição inválida');}if(!Array.isArray(ids)||ids.some(id=>!Number.isInteger(id)))throw new Error('Atribuição inválida');ids.forEach(id=>occupied.add(id));}}const available=tableRows.results.filter(t=>!occupied.has(t.id));return {time,tables:available.length,seats:available.reduce((sum,t)=>sum+t.seats,0),availableIds:available.map(t=>t.id)};});
+  const slots=times.filter(time=>!blocks.results.some(b=>minutes(time)<minutes(b.end)&&minutes(time)+60>minutes(b.start))).map(time=>{const occupied=new Set();for(const booking of bookings.results){if(Math.abs(minutes(booking.time)-minutes(time))<60){let ids;try{ids=JSON.parse(booking.table_ids)}catch{throw new Error('Atribuição inválida');}if(!Array.isArray(ids)||ids.some(id=>!Number.isInteger(id)))throw new Error('Atribuição inválida');ids.forEach(id=>occupied.add(id));}}const available=tableRows.results.filter(t=>!occupied.has(t.id));return {time,tables:available.length,seats:available.reduce((sum,t)=>sum+t.seats,0),availableIds:available.map(t=>t.id)};});
   return send(200,{date,slots});
  }
  if(request.method==='POST'&&path==='/admin/manual'){
