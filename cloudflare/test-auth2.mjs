@@ -1,0 +1,15 @@
+import assert from 'node:assert/strict';
+import {TOTP, Secret} from 'otpauth';
+import {SignJWT} from 'jose';
+import worker from './worker.mjs';
+const env={ADMIN_TOKEN:'chave-local-de-teste',ADMIN_TOTP_SECRET:'JBSWY3DPEHPK3PXP',ADMIN_SESSION_SECRET:'sessao-local-segredo-com-mais-de-32-caracteres',ADMIN_LIMIT:{limit:async()=>({success:true})},DB:{prepare(sql){return {sql}},async batch(){return [{results:[]},{results:[]},{results:[]}]}}};
+const origin='https://noooanyway.github.io';
+const code=new TOTP({secret:Secret.fromBase32(env.ADMIN_TOTP_SECRET)}).generate();
+const login=(password,code,requestOrigin=origin)=>worker.fetch(new Request('https://example.test/admin/login',{method:'POST',headers:{Origin:requestOrigin,'Content-Type':'application/json'},body:JSON.stringify({password,code})}),env);
+assert.equal((await login('errada',code)).status,401);assert.equal((await login(env.ADMIN_TOKEN,'abcdef')).status,401);assert.equal((await login(env.ADMIN_TOKEN,code,'https://evil.example')).status,403);
+assert.equal((await worker.fetch(new Request('https://example.test/admin',{headers:{Authorization:'Bearer '+env.ADMIN_TOKEN}}),env)).status,401,'chave antiga isolada não deve dar acesso');
+const response=await login(env.ADMIN_TOKEN,code);assert.equal(response.status,200);const {session}=await response.json();assert.equal((await worker.fetch(new Request('https://example.test/admin',{headers:{Authorization:'Bearer '+session}}),env)).status,200);
+const expired=await new SignJWT({scope:'admin'}).setProtectedHeader({alg:'HS256'}).setIssuer('furna-admin').setAudience('furna-admin').setIssuedAt().setExpirationTime('1s ago').sign(new TextEncoder().encode(env.ADMIN_SESSION_SECRET));
+assert.equal((await worker.fetch(new Request('https://example.test/admin',{headers:{Authorization:'Bearer '+expired}}),env)).status,401);
+assert.equal((await worker.fetch(new Request('https://example.test/admin',{headers:{Authorization:'Bearer '+session}}),{...env,ADMIN_TOTP_SECRET:''})).status,401);
+console.log('PASS: segundo fator, origem, sessão, expiração e bloqueio da chave isolada.');

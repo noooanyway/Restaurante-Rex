@@ -1,5 +1,9 @@
 import assert from 'node:assert/strict';
-const token=process.env.FURNA_TEST_TOKEN;
+const password=process.env.FURNA_TEST_TOKEN, code=process.env.FURNA_TEST_CODE;
+if(!password||!code){console.error('Usa cloudflare/test-online.ps1 para introduzir a chave e o código em privado.');process.exit(1)}
+const loginResponse=await fetch((process.env.FURNA_TEST_BASE||'https://furna-reservas.badduckstudio.workers.dev')+'/admin/login',{method:'POST',headers:{'Content-Type':'application/json',Origin:'https://noooanyway.github.io'},body:JSON.stringify({password,code})});
+if(!loginResponse.ok){console.error('Não foi possível iniciar sessão de teste.');process.exit(1)}
+const {session:token}=await loginResponse.json();
 if(!token){console.error('Usa cloudflare/test-online.ps1 para introduzir a chave em privado.');process.exit(1)}
 const base=process.env.FURNA_TEST_BASE||'https://furna-reservas.badduckstudio.workers.dev',date='2035-02-06';
 const headers={'Content-Type':'application/json',Authorization:`Bearer ${token}`,Origin:'https://noooanyway.github.io'};

@@ -1,3 +1,4 @@
+import { issueAdminSession, validAdminSession } from './admin-auth.mjs';
 import { sendNotification } from './email.mjs';
 // Private-management prototype. No public booking endpoint is enabled.
 // ADMIN_TOKEN is configured as a Cloudflare secret, never in this file.
@@ -36,7 +37,14 @@ export default {
   const result=await env.DB.prepare(sql).bind(date,d.time,d.time,date,d.time,d.time,d.people,id,date,d.time,d.name.trim(),d.phone,d.people,d.children,d.babies,d.chair?1:0,d.message,d.email||null,d.people).run();if(!result.meta.changes)return send(409,{error:'Sem mesas suficientes para este horário.'});return send(201,{id,status:'pending',expiresInMinutes:60});
  }
  if(!path.startsWith('/admin'))return send(404,{error:'Não encontrado.'});
- if(!await sameSecret(request.headers.get('Authorization')?.replace(/^Bearer /,''),env.ADMIN_TOKEN)){if(!(await env.ADMIN_LIMIT.limit({key:ip})).success)return send(429,{error:'Demasiadas tentativas. Aguarde e volte a tentar.'});return send(401,{error:'Acesso não autorizado.'});}
+ if(path==='/admin/login'&&request.method==='POST'){
+  if(!(await env.ADMIN_LIMIT.limit({key:ip})).success)return send(429,{error:'Demasiadas tentativas. Aguarde e volte a tentar.'});
+  if(requestOrigin!==origin && !(env.ALLOW_LOCAL_TEST==='1'&&allowedOrigin))return send(403,{error:'Origem não autorizada.'});
+  let data;try{const body=await request.text();if(body.length>1024)return send(400,{error:'Pedido inválido.'});data=JSON.parse(body)}catch{return send(400,{error:'Pedido inválido.'})}
+  if(typeof data.password!=='string'||data.password.length>512||!await sameSecret(data.password,env.ADMIN_TOKEN))return send(401,{error:'Credenciais inválidas.'});
+  const session=await issueAdminSession(env,data.code);if(!session)return send(401,{error:'Credenciais inválidas.'});return send(200,{session,expiresIn:900});
+ }
+ if(!await validAdminSession(env,request.headers.get('Authorization')?.replace(/^Bearer /,'')))return send(401,{error:'Sessão inválida ou expirada. Entre novamente.'});
  if(request.method==='GET'&&path==='/admin/availability'){
   const date=new URL(request.url).searchParams.get('date')||'';
   const parsed=new Date(date+'T12:00:00Z');
