@@ -1,0 +1,3 @@
+CREATE TABLE IF NOT EXISTS table_positions(table_id INTEGER PRIMARY KEY REFERENCES dining_tables(id), x INTEGER NOT NULL CHECK(x BETWEEN 0 AND 11), y INTEGER NOT NULL CHECK(y BETWEEN 0 AND 11));
+CREATE TABLE IF NOT EXISTS schedule_blocks(id TEXT PRIMARY KEY, date TEXT NOT NULL, start TEXT NOT NULL, end TEXT NOT NULL, reason TEXT NOT NULL DEFAULT '');
+CREATE INDEX IF NOT EXISTS schedule_blocks_date ON schedule_blocks(date,start,end);
