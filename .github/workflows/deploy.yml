@@ -32,6 +32,9 @@ jobs:
         run: npm ci
 
       - name: Build website
+        env:
+          NEXT_PUBLIC_ENABLE_BOOKINGS: "true"
+          NEXT_PUBLIC_BOOKING_API: "https://furna-reservas.badduckstudio.workers.dev"
         run: npm run build
 
       - name: Setup Pages

@@ -39,8 +39,8 @@ export default function Home() {
         <div className="visit-heading"><span className="eyebrow">03 / VISITAR O {r.name}</span><h2>Contactos e localização</h2></div>
         <div className="visit-body"><p className="visit-note">Encontre-nos em<br />Santo António.</p><div className="visit-details">
           <dl><div><dt>ONDE</dt><dd>{r.address || 'Morada a anunciar.'}</dd></div><div><dt>QUANDO</dt><dd>{r.hours || 'Horários a anunciar.'}</dd></div><div><dt>CONTACTOS</dt><dd>{r.phone && <a href={`tel:${r.phone.replace(/\s/g, '')}`}>{r.phone}</a>}{r.email && <a href={`mailto:${r.email}`}>{r.email}</a>}{!r.phone && !r.email && 'Contactos disponíveis em breve.'}</dd></div></dl>
-          {r.bookingUrl ? <a className="reservation" href={r.bookingUrl}>Reservar uma mesa <span aria-hidden="true">↗</span></a> : <div className="reservation"><span>Reservas</span><span className="availability">EM BREVE</span></div>}
-          <p className="booking-note">{r.bookingUrl ? 'Consulte a disponibilidade no sistema de reservas.' : 'As reservas ainda não estão disponíveis. Os detalhes serão anunciados aqui.'}</p>
+          <a className="reservation" href="#reservas">Pedir reserva <span aria-hidden="true">↗</span></a>
+          <p className="booking-note">Consulte os horários disponíveis e envie o pedido. A reserva depende de confirmação pelo restaurante.</p>
         </div></div>
       </section>
     </main>

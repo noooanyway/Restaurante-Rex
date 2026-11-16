@@ -4,6 +4,7 @@
   "compatibility_date": "2026-11-01",
   "workers_dev": true,
   "preview_urls": false,
+  "vars": {"ENABLE_PUBLIC_BOOKINGS": "true"},
   "d1_databases": [{"binding":"DB","database_name":"furna-reservas","database_id":"f440b29b-1aec-4189-ac54-86df24a10b38"}],
   "ratelimits": [{"name":"ADMIN_LIMIT","namespace_id":"786201","simple":{"limit":10,"period":60}},{"name":"BOOKING_LIMIT","namespace_id":"786202","simple":{"limit":10,"period":60}}]
 }
