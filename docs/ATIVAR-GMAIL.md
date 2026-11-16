@@ -24,3 +24,13 @@ O passo seguinte é criar credenciais OAuth, autorizar apenas gmail.send e guard
 - Ativar cron e acompanhar falhas. Configurar EMAIL_PROVIDER=gmail e RESTAURANT_EMAIL=furna.restaurante00@gmail.com apenas na ativação coordenada.
 
 O Gmail permitirá respostas na mesma caixa. Clientes sem email continuam a ser contactados por telefone. Não equivale a serviço de entrega garantida. A cópia remota e alertas independentes continuam por implementar.
+
+## Atualização 16/11/2026 — fila Gmail ativa
+
+O teste real de envio foi recebido pelo dono. Foi criada gmail_outbox (migração 006), sem copiar eventos da fila antiga. Triggers antigos deixaram de criar entradas. A fila nova guarda os dados do evento e separa o aviso ao restaurante (pending) do recibo ao cliente (receipt). Clientes sem email não geram emails. Aprovação, recusa, cancelamento e mudança de data/hora/total geram eventos. Inserções telefónicas confirmadas não geram automaticamente confirmação; contactar manualmente.
+
+Cron Cloudflare a cada minuto, máximo de oito mensagens por execução. Eventos de cliente em espera ultrapassados por decisões mais recentes são suprimidos. Erros anteriores ao envio e respostas explícitas de rejeição são repetidos até cinco tentativas, com dez minutos de intervalo. Falhas de rede no envio, erros 5xx ou interrupção após entrega ficam incertos e exigem consulta manual do Gmail; não há botão automático de reenviar essas mensagens. Sent significa aceite pelo Gmail, não comprovadamente entregue nem lido. Os detalhes de falha aparecem no painel após a publicação da interface.
+
+Rever Google Auth Platform > Público-alvo: em modo Testing, refresh tokens com gmail.send podem expirar após sete dias. A passagem para produção e eventual verificação Google devem ser avaliadas antes de depender continuamente deste serviço. Não substituir o acompanhamento manual até concluir esse passo.
+
+Uma mensagem de teste isolada foi colocada na nova fila para verificar a execução agendada. Não envolve clientes. Cópias remotas e alertas independentes de falha ainda não estão implementados.

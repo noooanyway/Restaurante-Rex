@@ -113,17 +113,24 @@ export default {
  if(request.method==='POST'&&path==='/admin/tables'){let data;try{data=await request.json()}catch{return send(400,{error:'Pedido inválido.'})}if(!Number.isInteger(data.seats)||data.seats<1||data.seats>20)return send(400,{error:'Capacidade inválida.'});await env.DB.prepare('INSERT INTO dining_tables(seats) VALUES (?)').bind(data.seats).run();return send(201,{ok:true});}
  if(request.method==='PATCH'&&path==='/admin/bookings'){let data;try{data=await request.json()}catch{return send(400,{error:'Pedido inválido.'})}if(!['approved','rejected','cancelled'].includes(data.status)||typeof data.id!=='string')return send(400,{error:'Estado inválido.'});const previous=data.status==='cancelled'?'approved':'pending';const result=await env.DB.prepare("UPDATE reservations SET status=? WHERE id=? AND status=? AND (status<>'pending' OR expires_at IS NULL OR expires_at>unixepoch())").bind(data.status,data.id,previous).run();if(!result.meta.changes)return send(409,{error:'Pedido inexistente ou já alterado.'});return send(200,{ok:true});}
  if(request.method!=='GET'||path!=='/admin')return send(404,{error:'Não encontrado.'});
- const [bookings,tables,delivery]=await env.DB.batch([env.DB.prepare("SELECT id,date,time,name,phone,email,people,children,babies,chair,message,CASE WHEN status='pending' AND expires_at IS NOT NULL AND expires_at<=unixepoch() THEN 'expired' ELSE status END AS status,table_ids,expires_at FROM reservations ORDER BY date DESC,time LIMIT 500"),env.DB.prepare('SELECT id,seats,active FROM dining_tables ORDER BY id'),env.DB.prepare('SELECT id,reservation_id,event,attempts,last_error FROM notification_outbox WHERE sent_at IS NULL AND last_error IS NOT NULL ORDER BY id DESC LIMIT 100')]);
+ const [bookings,tables,delivery]=await env.DB.batch([env.DB.prepare("SELECT id,date,time,name,phone,email,people,children,babies,chair,message,CASE WHEN status='pending' AND expires_at IS NOT NULL AND expires_at<=unixepoch() THEN 'expired' ELSE status END AS status,table_ids,expires_at FROM reservations ORDER BY date DESC,time LIMIT 500"),env.DB.prepare('SELECT id,seats,active FROM dining_tables ORDER BY id'),env.DB.prepare("SELECT id,reservation_id,event,attempts,last_error,state FROM gmail_outbox WHERE state IN ('failed','uncertain') OR (state='queued' AND last_error IS NOT NULL) OR (state='sending' AND next_attempt_at<=unixepoch()) ORDER BY id DESC LIMIT 100")]);
  return send(200,{bookings:bookings.results,tables:tables.results,deliveryFailures:delivery.results});
 }};
 
-// Atomically lease one message at a time. A failed send is retried after five minutes.
-// Provider idempotency reduces duplicates after a crash between sending and recording.
-async function processOutbox(env){
- for(let i=0;i<20;i++){
-  const lease=await env.DB.prepare(`UPDATE notification_outbox SET attempts=attempts+1,next_attempt_at=unixepoch()+300 WHERE id=(SELECT id FROM notification_outbox WHERE sent_at IS NULL AND next_attempt_at<=unixepoch() ORDER BY id LIMIT 1) RETURNING id,reservation_id,event`).first();
-  if(!lease)break;
-  try{const reservation=await env.DB.prepare('SELECT id,date,time,people,email FROM reservations WHERE id=?').bind(lease.reservation_id).first();if(!reservation)throw new Error('Reservation missing');await sendNotification(env,lease.event,{...reservation,notificationId:lease.id});await env.DB.prepare('UPDATE notification_outbox SET sent_at=unixepoch(),last_error=NULL WHERE id=?').bind(lease.id).run();}
-  catch{await env.DB.prepare("UPDATE notification_outbox SET last_error='Falha de envio ou configuração' WHERE id=?").bind(lease.id).run();}
+// Gmail has no send idempotency key: interrupted sends require manual inspection.
+export async function processOutbox(env){
+ if(env.ENABLE_EMAILS!=='true')return;
+ await env.DB.prepare("UPDATE gmail_outbox SET state='superseded' WHERE state='queued' AND event<>'pending' AND EXISTS (SELECT 1 FROM gmail_outbox newer WHERE newer.reservation_id=gmail_outbox.reservation_id AND newer.id>gmail_outbox.id AND newer.event<>'pending')").run();
+ await env.DB.prepare("UPDATE gmail_outbox SET state='uncertain',last_error='Envio interrompido: confirmar no Gmail' WHERE state='sending' AND next_attempt_at<=unixepoch()").run();
+ for(let i=0;i<8;i++){
+  const item=await env.DB.prepare("UPDATE gmail_outbox SET state='sending',attempts=attempts+1,next_attempt_at=unixepoch()+600 WHERE id=(SELECT id FROM gmail_outbox WHERE state='queued' AND next_attempt_at<=unixepoch() ORDER BY id LIMIT 1) RETURNING id,event,payload,attempts").first();
+  if(!item)break;
+  try{
+   const result=await sendNotification(env,item.event,JSON.parse(item.payload));
+   try{await env.DB.prepare("UPDATE gmail_outbox SET state=?,sent_at=unixepoch(),last_error=NULL WHERE id=?").bind(result.skipped?'skipped':'sent',item.id).run();}catch{throw {uncertain:true}}
+  }catch(error){
+   const state=error.uncertain?'uncertain':item.attempts>=5?'failed':'queued';
+   await env.DB.prepare("UPDATE gmail_outbox SET state=?,last_error=?,next_attempt_at=unixepoch()+600 WHERE id=?").bind(state,error.uncertain?'Entrega incerta: confirmar no Gmail':'Falha no envio ou autorização; verificar configuração',item.id).run();
+  }
  }
 }
