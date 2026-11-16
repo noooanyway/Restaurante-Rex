@@ -24,3 +24,13 @@ A aprovação não envia SMS/email: o responsável deve contactar o cliente pelo
 A página `/gestao/` permite consultar pedidos, aprovar, recusar, cancelar e adicionar mesas. Usa a mesma chave ADMIN_TOKEN definida no servidor; a chave só permanece na memória da página. O painel ainda não oferece autenticação individual, edição de reservas, inserção por telefone, bloqueios de horário ou grelha operacional de ocupação.
 
 Não existe notificação automática por email ou SMS. Antes de usar com clientes reais, implementar autenticação apropriada, proteção contra tentativas de acesso, limitação de pedidos, HTTPS, backups e política de retenção; configurar um fornecedor de email e testar a entrega. Não ativar reservas públicas até estas etapas estarem concluídas.
+
+## Proteção e cópias — estado atual
+
+O servidor Node inclui limites locais básicos por endereço de ligação (30 acessos de gestão e 20 pedidos em 15 minutos), apenas em memória e por processo. Atrás de proxy pode agrupar utilizadores e não constitui proteção completa; configurar proteção por IP e limitação na infraestrutura antes da publicação. Não confiar em cabeçalhos de IP enviados pelo cliente.
+
+`server/backup.mjs` cria uma cópia online consistente do SQLite e verifica a integridade. Definir BOOKING_DB e BACKUP_DIR em local privado, executar com Node 24 e automatizar no alojamento. Cópias no mesmo disco não protegem contra perda desse disco: transportar para armazenamento privado separado, definir retenção e testar restauro. Ainda não existe agendamento nem armazenamento remoto configurados. O teste `node server/test-backup.mjs` verifica uma cópia local com dados de teste.
+
+O painel publicado continua sem servidor: NEXT_PUBLIC_BOOKING_API tem de apontar para um serviço HTTPS real e o servidor precisa de ADMIN_TOKEN forte definido como segredo. Não existe chave pré-definida. Não usar a chave de teste para produção. A chave partilhada atual não substitui autenticação individual, sessões seguras e proteção de acesso; não publicar dados de clientes antes de concluir essas etapas.
+
+A adaptação planeada para Cloudflare D1 exige implementação e política de backups próprias: este script e estes limites são apenas para o servidor Node/SQLite atual e não configuram Cloudflare.

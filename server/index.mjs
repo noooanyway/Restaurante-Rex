@@ -11,6 +11,16 @@ function valid(date,time){const d=new Date(date+'T12:00:00Z');return /^\d{4}-\d{
 function free(date,time){const occupied=new Set();for(const b of db.prepare("SELECT time,table_ids FROM bookings WHERE date=? AND status IN ('pending','approved')").all(date)){if(Math.abs(minutes(b.time)-minutes(time))<60)JSON.parse(b.table_ids).forEach(id=>occupied.add(id));}return db.prepare('SELECT * FROM tables ORDER BY seats,id').all().filter(t=>!occupied.has(t.id));}
 const allowed=(process.env.ALLOWED_ORIGINS||'http://127.0.0.1:3003,http://localhost:3003').split(',');
 const admin=req=>{const token=process.env.ADMIN_TOKEN;const supplied=req.headers.authorization?.replace(/^Bearer /,'');return token&&supplied&&Buffer.byteLength(token)===Buffer.byteLength(supplied)&&timingSafeEqual(Buffer.from(token),Buffer.from(supplied));};
+// Per-process, per-connection-address limits. Behind a proxy, configure a trusted
+// edge rate limiter as well; forwarded headers are intentionally not trusted here.
+const attempts=new Map();
+function rateLimit(req,group,limit,windowMs){
+ const now=Date.now(),key=`${group}:${req.socket.remoteAddress||'unknown'}`;
+ if(attempts.size>10000)for(const [k,v] of attempts)if(v.until<=now)attempts.delete(k);
+ if(attempts.size>10000&&!attempts.has(key))return false;
+ let entry=attempts.get(key);if(!entry||entry.until<=now){entry={count:0,until:now+windowMs};attempts.set(key,entry);}
+ return ++entry.count<=limit;
+}
 http.createServer(async(req,res)=>{
  const origin=req.headers.origin;if(origin&&!allowed.includes(origin)){res.writeHead(403);return res.end();}if(origin)res.setHeader('Access-Control-Allow-Origin',origin);res.setHeader('Vary','Origin');res.setHeader('Cache-Control','no-store');res.setHeader('Access-Control-Allow-Headers','Content-Type,Authorization');res.setHeader('Access-Control-Allow-Methods','GET,POST,PATCH,OPTIONS');
  const send=(status,data)=>{res.writeHead(status,{'Content-Type':'application/json'});res.end(JSON.stringify(data));};if(req.method==='OPTIONS'){res.writeHead(204);return res.end();}
@@ -18,10 +28,11 @@ http.createServer(async(req,res)=>{
  if(req.method==='GET'&&url.pathname==='/availability'){const date=url.searchParams.get('date')||'';return send(200,{slots:slots.filter(t=>valid(date,t)).map(time=>({time,tables:free(date,time).length,seats:free(date,time).reduce((n,t)=>n+t.seats,0),layout:db.prepare('SELECT * FROM tables ORDER BY id').all().map(table=>({...table,state:free(date,time).some(t=>t.id===table.id)?'available':'reserved'}))}))});}
  let raw='';if(req.method!=='GET'){for await(const chunk of req){raw+=chunk;if(raw.length>12000)return send(413,{error:'Pedido demasiado grande.'});}}const data=raw?JSON.parse(raw):{};
  if(req.method==='POST'&&url.pathname==='/bookings'){
+ if(!rateLimit(req,'booking',20,15*60*1000))return send(429,{error:'Demasiados pedidos. Tente novamente mais tarde.'});
  const {date,time,name,phone,people,children=0,babies=0,chair=false,message=''}=data;
  if(!valid(date,time)||typeof name!=='string'||!name.trim()||name.length>120||typeof phone!=='string'||!/^\+?[\d\s()-]{7,30}$/.test(phone)||![people,children,babies].every(Number.isInteger)||people<1||people>48||children<0||babies<0||children+babies>people||typeof message!=='string'||message.length>2000)return send(400,{error:'Verifique a data, horário, contactos e número de pessoas.'});
  db.exec('BEGIN IMMEDIATE');try{const selected=[];let seats=0;for(const t of free(date,time)){selected.push(t.id);seats+=t.seats;if(seats>=people)break;}if(seats<people){db.exec('ROLLBACK');return send(409,{error:'Já não há mesas suficientes neste horário. Escolha outro.'});}const id=randomUUID();db.prepare('INSERT INTO bookings VALUES (?,?,?,?,?,?,?,?,?,?,?,?)').run(id,date,time,name.trim(),phone,people,children,babies,chair?1:0,message,'pending',JSON.stringify(selected));db.exec('COMMIT');return send(201,{id,status:'pending'});}catch(e){db.exec('ROLLBACK');throw e;}}
- if(url.pathname.startsWith('/admin')){if(!admin(req))return send(401,{error:'Acesso reservado ao restaurante.'});
+ if(url.pathname.startsWith('/admin')){if(!rateLimit(req,'admin',30,15*60*1000))return send(429,{error:'Demasiadas tentativas. Tente novamente mais tarde.'});if(!admin(req))return send(401,{error:'Acesso reservado ao restaurante.'});
  if(req.method==='GET'&&url.pathname==='/admin')return send(200,{bookings:db.prepare('SELECT * FROM bookings ORDER BY date,time').all(),tables:db.prepare('SELECT * FROM tables').all()});
  if(req.method==='POST'&&url.pathname==='/admin/tables'){if(!Number.isInteger(data.seats)||data.seats<1||data.seats>20)return send(400,{error:'Capacidade inválida.'});db.prepare('INSERT INTO tables(seats) VALUES (?)').run(data.seats);return send(201,{ok:true});}
  if(req.method==='PATCH'&&url.pathname==='/admin/bookings'){if(!['approved','rejected','cancelled'].includes(data.status))return send(400,{error:'Estado inválido.'});const row=db.prepare('SELECT status FROM bookings WHERE id=?').get(data.id);if(!row||!['pending','approved'].includes(row.status))return send(409,{error:'Este pedido já foi encerrado.'});db.prepare('UPDATE bookings SET status=? WHERE id=?').run(data.status,data.id);return send(200,{ok:true});}}

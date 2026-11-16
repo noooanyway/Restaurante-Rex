@@ -1,0 +1,9 @@
+{
+  "name": "furna-reservas",
+  "main": "cloudflare/worker.mjs",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": false,
+  "preview_urls": false,
+  "d1_databases": [{"binding":"DB","database_name":"furna-reservas","database_id":"f440b29b-1aec-4189-ac54-86df24a10b38"}],
+  "ratelimits": [{"name":"ADMIN_LIMIT","namespace_id":"786201","simple":{"limit":10,"period":60}}]
+}

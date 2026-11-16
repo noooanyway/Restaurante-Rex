@@ -5,3 +5,6 @@ out/
 .env*
 *.tar.gz
 bookings.sqlite*
+
+.wrangler/
+.dev.vars*
