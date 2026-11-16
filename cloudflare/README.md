@@ -35,3 +35,9 @@ Cloudflare Access requer configuração Zero Trust e política de acesso; a chav
 O Worker `furna-reservas` está publicado em workers.dev e ligado à D1. O segredo ADMIN_TOKEN foi configurado pelo dono na Cloudflare. GET /admin sem chave devolveu 401; as reservas públicas estão desativadas no servidor e no frontend. A página de gestão aponta para o serviço, mas o acesso autenticado do utilizador e ações ainda precisam de verificação online. O token partilhado e o limitador aproximado não substituem Cloudflare Access/autenticação individual e proteção adicional; não usar dados reais até concluir essas etapas. O Time Travel D1 não é uma cópia independente. A exportação manual existe, mas backups automáticos externos e restauro ainda não foram configurados.
 
 Envio automático de emails adiado por escolha do utilizador. Cron desativado. Decisões devem ser comunicadas manualmente por telefone ou Gmail. Não configurar RESEND_API_KEY até o utilizador decidir ativar.
+
+## Mapa de mesas — versão inicial
+
+O painel oferece um mapa funcional por data/hora: estados livre, pendente e confirmada; escolha de grupo e atribuição de uma ou mais mesas. Não representa posições físicas nem permite arrastar. A atribuição usa uma atualização SQL atómica que valida capacidade, mesas ativas e conflitos em horários sobrepostos. O painel permite adicionar mesas e alterar capacidade/estado apenas quando não haja reservas ativas associadas; para desativar mesas ocupadas, reatribuir primeiro. Faltam posicionamento físico, gestão completa de contactos, autenticação individual e testes completos antes de dados reais.
+
+Testes numa D1 local isolada: `cloudflare/test-floor.mjs` verifica acesso, ocupação, atribuição múltipla, capacidade, ativação e concorrência. O Worker online foi atualizado; as reservas públicas continuam desativadas. A interface depende de publicação no GitHub Pages.

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-const base='http://127.0.0.1:8788';const headers={'Content-Type':'application/json',Authorization:'Bearer teste-local-furna'};
+const base=process.env.TEST_BASE || 'http://127.0.0.1:8788';const headers={'Content-Type':'application/json',Authorization:'Bearer teste-local-furna'};
 const body={date:'2030-01-09',time:'12:00',name:'Teste telefone',phone:'900000000',people:48,children:0,babies:0,chair:false,message:''};
 const send=()=>fetch(base+'/admin/manual',{method:'POST',headers,body:JSON.stringify(body)});
 const [a,b]=await Promise.all([send(),send()]);assert.deepEqual([a.status,b.status].sort(),[201,409]);
