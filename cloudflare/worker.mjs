@@ -45,6 +45,10 @@ export default {
   const session=await issueAdminSession(env,data.code);if(!session)return send(401,{error:'Credenciais inválidas.'});return send(200,{session,expiresIn:900});
  }
  if(!await validAdminSession(env,request.headers.get('Authorization')?.replace(/^Bearer /,'')))return send(401,{error:'Sessão inválida ou expirada. Entre novamente.'});
+ if(request.method==='POST'&&path==='/admin/email-test'){
+  if(!(await env.ADMIN_LIMIT.limit({key:ip})).success)return send(429,{error:'Aguarde antes de repetir o teste.'});
+  try{await sendNotification(env,'test',{});return send(200,{ok:true,message:'Gmail aceitou o envio. Confirme a receção na caixa da Furna.'})}catch{return send(502,{error:'Falha no teste Gmail. Verifique a autorização e configuração.'})}
+ }
  if(request.method==='GET'&&path==='/admin/availability'){
   const date=new URL(request.url).searchParams.get('date')||'';
   const parsed=new Date(date+'T12:00:00Z');
