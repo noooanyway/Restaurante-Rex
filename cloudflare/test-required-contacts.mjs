@@ -1,0 +1,4 @@
+import assert from 'node:assert/strict';import worker from './worker.mjs';
+let touched=false;const env={ENABLE_PUBLIC_BOOKINGS:'true',BOOKING_LIMIT:{limit:async()=>({success:true})},DB:{prepare(){touched=true;throw Error('Unexpected database write')}}};
+const d={date:'2035-02-06',time:'12:00',name:'Teste',phone:'912345678',email:'teste@example.test',people:2,children:0,babies:0,message:''};
+for(const invalid of [{email:''},{email:null},{email:'bad'},{phone:''},{phone:'-------'},{phone:'+1234567890123456'}]){const r=await worker.fetch(new Request('https://example.test/bookings',{method:'POST',headers:{Origin:'https://noooanyway.github.io','Content-Type':'application/json'},body:JSON.stringify({...d,...invalid})}),env);assert.equal(r.status,400);assert.equal(touched,false)}console.log('PASS: email e telefone obrigatórios e inválidos bloqueados antes de gravar.');

@@ -11,11 +11,11 @@ async function call(path,method='GET',data){const r=await fetch(base+path,{metho
 const ids=[];let block;
 try{
  let r=await call('/admin/table-agenda?date='+date);assert.equal(r.status,200,'Acesso ou agenda');assert.equal(r.body.bookings.length,0,'A data de teste já contém reservas; teste interrompido');
- const d={date,time:'12:00',name:'TESTE - ignorar',phone:'900000000',email:'',people:4,children:0,babies:0,chair:false,message:'Dados fictícios'};
+ const d={date,time:'12:00',name:'TESTE - ignorar',phone:'900000000',email:'furna.restaurante00@gmail.com',people:4,children:0,babies:0,chair:false,message:'Dados fictícios'};
  r=await call('/admin/manual','POST',d);assert.equal(r.status,201,'Criar reserva');ids.push(r.body.id);
  r=await call('/admin/manual','POST',{...d,time:'13:15'});assert.equal(r.status,201,'Criar reserva seguinte');ids.push(r.body.id);
  r=await call('/admin/table-agenda?date='+date);assert.equal(r.status,200);assert(ids.every(id=>r.body.bookings.some(b=>b.id===id)),'Agenda deve mostrar ambas as reservas');const one=r.body.bookings.find(b=>b.id===ids[0]),two=r.body.bookings.find(b=>b.id===ids[1]);assert.deepEqual(JSON.parse(one.table_ids),JSON.parse(two.table_ids),'Mesma mesa pode ser reutilizada');
- r=await call('/admin/contact','PATCH',{id:ids[0],name:'TESTE - editado',phone:'900000000',email:'',message:'Observação fictícia'});assert.equal(r.status,200,'Editar contactos');
+ r=await call('/admin/contact','PATCH',{id:ids[0],name:'TESTE - editado',phone:'900000000',email:'furna.restaurante00@gmail.com',message:'Observação fictícia'});assert.equal(r.status,200,'Editar contactos');
  r=await call('/admin/edit','PATCH',{id:ids[1],date,time:'13:30',people:4});assert.equal(r.status,200,'Alterar hora');
  r=await call('/admin/blocks','POST',{date,start:'12:15',end:'12:45',reason:'TESTE'});assert.equal(r.status,409,'Bloqueio sobre reserva tem de ser recusado');
  r=await call('/admin/blocks','POST',{date,start:'19:00',end:'20:00',reason:'TESTE'});assert.equal(r.status,201,'Criar bloqueio');block=r.body.id;
