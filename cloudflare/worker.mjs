@@ -5,15 +5,45 @@ const enc = new TextEncoder();
 async function sameSecret(a,b){if(!a||!b)return false;const [x,y]=await Promise.all([crypto.subtle.digest('SHA-256',enc.encode(a)),crypto.subtle.digest('SHA-256',enc.encode(b))]);const x8=new Uint8Array(x),y8=new Uint8Array(y);let difference=0;for(let i=0;i<x8.length;i++)difference|=x8[i]^y8[i];return difference===0;}
 export default {async fetch(request,env){
  const headers={'Content-Type':'application/json','Cache-Control':'no-store','Vary':'Origin','X-Content-Type-Options':'nosniff'};
- if(request.headers.get('Origin')===origin)headers['Access-Control-Allow-Origin']=origin;
+ const requestOrigin=request.headers.get('Origin');
+ const allowedOrigin=requestOrigin===origin || (env.ALLOW_LOCAL_TEST==='1' && requestOrigin==='http://127.0.0.1:3006');
+ if(allowedOrigin)headers['Access-Control-Allow-Origin']=requestOrigin;
  const send=(status,data)=>new Response(JSON.stringify(data),{status,headers});
- if(request.method==='OPTIONS'){if(request.headers.get('Origin')!==origin)return send(403,{error:'Origem não autorizada.'});return new Response(null,{status:204,headers:{...headers,'Access-Control-Allow-Methods':'GET, POST, PATCH, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type'}});}
+ if(request.method==='OPTIONS'){if(!allowedOrigin)return send(403,{error:'Origem não autorizada.'});return new Response(null,{status:204,headers:{...headers,'Access-Control-Allow-Methods':'GET, POST, PATCH, OPTIONS','Access-Control-Allow-Headers':'Authorization, Content-Type'}});}
  const path=new URL(request.url).pathname; if(!path.startsWith('/admin'))return send(404,{error:'Nao encontrado.'});
- const ip=request.headers.get('CF-Connecting-IP')||'unknown';if(!(await env.ADMIN_LIMIT.limit({key:ip})).success)return send(429,{error:'Demasiadas tentativas. Aguarde e volte a tentar.'});
- if(!await sameSecret(request.headers.get('Authorization')?.replace(/^Bearer /,''),env.ADMIN_TOKEN))return send(401,{error:'Acesso não autorizado.'});
- if(request.method==='POST'&&path==='/admin/tables'){let data;try{data=await request.json()}catch{return send(400,{error:'Pedido inv�lido.'})}if(!Number.isInteger(data.seats)||data.seats<1||data.seats>20)return send(400,{error:'Capacidade inv�lida.'});await env.DB.prepare('INSERT INTO dining_tables(seats) VALUES (?)').bind(data.seats).run();return send(201,{ok:true});}
- if(request.method==='PATCH'&&path==='/admin/bookings'){let data;try{data=await request.json()}catch{return send(400,{error:'Pedido inv�lido.'})}if(!['approved','rejected','cancelled'].includes(data.status)||typeof data.id!=='string')return send(400,{error:'Estado inv�lido.'});const previous=data.status==='cancelled'?'approved':'pending';const result=await env.DB.prepare('UPDATE reservations SET status=? WHERE id=? AND status=?').bind(data.status,data.id,previous).run();if(!result.meta.changes)return send(409,{error:'Pedido inexistente ou j� alterado.'});return send(200,{ok:true});}
- if(request.method!=='GET'||path!=='/admin')return send(404,{error:'N�o encontrado.'});
+ const ip=request.headers.get('CF-Connecting-IP')||'unknown';
+ if(!await sameSecret(request.headers.get('Authorization')?.replace(/^Bearer /,''),env.ADMIN_TOKEN)){if(!(await env.ADMIN_LIMIT.limit({key:ip})).success)return send(429,{error:'Demasiadas tentativas. Aguarde e volte a tentar.'});return send(401,{error:'Acesso não autorizado.'});}
+ if(request.method==='GET'&&path==='/admin/availability'){
+  const date=new URL(request.url).searchParams.get('date')||'';
+  const parsed=new Date(date+'T12:00:00Z');
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||Number.isNaN(parsed.getTime())||parsed.toISOString().slice(0,10)!==date)return send(400,{error:'Data inválida.'});
+  if(parsed.getUTCDay()===1)return send(200,{slots:[]});
+  const [tableRows,bookings]=await env.DB.batch([env.DB.prepare('SELECT id,seats FROM dining_tables WHERE active=1 ORDER BY id'),env.DB.prepare("SELECT time,table_ids FROM reservations WHERE date=? AND status IN ('pending','approved')").bind(date)]);
+  const times=['12:00','12:30','13:00','13:30','14:00','19:00','19:30','20:00','20:30','21:00'];
+  const minutes=t=>Number(t.slice(0,2))*60+Number(t.slice(3));
+  const slots=times.map(time=>{const occupied=new Set();for(const booking of bookings.results){if(Math.abs(minutes(booking.time)-minutes(time))<60){let ids;try{ids=JSON.parse(booking.table_ids)}catch{throw new Error('Atribuição inválida');}if(!Array.isArray(ids)||ids.some(id=>!Number.isInteger(id)))throw new Error('Atribuição inválida');ids.forEach(id=>occupied.add(id));}}const available=tableRows.results.filter(t=>!occupied.has(t.id));return {time,tables:available.length,seats:available.reduce((sum,t)=>sum+t.seats,0),availableIds:available.map(t=>t.id)};});
+  return send(200,{date,slots});
+ }
+ if(request.method==='POST'&&path==='/admin/manual'){
+  let d;try{d=await request.json()}catch{return send(400,{error:'Pedido inválido.'});}
+  const date=typeof d.date==='string'?d.date:'';const parsed=new Date(date+'T12:00:00Z');const times=['12:00','12:30','13:00','13:30','14:00','19:00','19:30','20:00','20:30','21:00'];
+  if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||Number.isNaN(parsed.getTime())||parsed.toISOString().slice(0,10)!==date||parsed.getUTCDay()===1||!times.includes(d.time)||typeof d.name!=='string'||!d.name.trim()||d.name.length>120||typeof d.phone!=='string'||!/^\+?[\d\s()-]{7,30}$/.test(d.phone)||![d.people,d.children,d.babies].every(Number.isInteger)||d.people<1||d.people>48||d.children<0||d.babies<0||d.children+d.babies>=d.people||typeof d.message!=='string'||d.message.length>2000)return send(400,{error:'Verifique os dados e o horário.'});
+  const id=crypto.randomUUID();
+  // One atomic statement selects and occupies tables; concurrent requests cannot both claim them.
+  const sql=`WITH free AS (SELECT t.id,t.seats FROM dining_tables t WHERE t.active=1 AND NOT EXISTS (SELECT 1 FROM reservations r, json_each(r.table_ids) j WHERE r.date=? AND r.status IN ('pending','approved') AND abs((CAST(substr(r.time,1,2) AS INTEGER)*60+CAST(substr(r.time,4,2) AS INTEGER))-(CAST(substr(?,1,2) AS INTEGER)*60+CAST(substr(?,4,2) AS INTEGER)))<60 AND j.value=t.id)), ranked AS (SELECT id,seats,SUM(seats) OVER (ORDER BY id) AS cumulative FROM free), chosen AS (SELECT id,seats FROM ranked WHERE cumulative-seats<?) INSERT INTO reservations(id,date,time,name,phone,people,children,babies,chair,message,status,table_ids) SELECT ?,?,?,?,?,?,?,?,?,?,'approved',json_group_array(id) FROM chosen HAVING COALESCE(SUM(seats),0)>=?`;
+  const result=await env.DB.prepare(sql).bind(date,d.time,d.time,d.people,id,date,d.time,d.name.trim(),d.phone,d.people,d.children,d.babies,d.chair?1:0,d.message,d.people).run();
+  if(!result.meta.changes)return send(409,{error:'Sem mesas suficientes para este horário.'});return send(201,{id,status:'approved'});
+ }
+ if(request.method==='PATCH'&&path==='/admin/edit'){
+ let d;try{d=await request.json()}catch{return send(400,{error:'Pedido inválido.'})}
+ const date=typeof d.date==='string'?d.date:'';const day=new Date(date+'T12:00:00Z');const times=['12:00','12:30','13:00','13:30','14:00','19:00','19:30','20:00','20:30','21:00'];
+ if(typeof d.id!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(date)||Number.isNaN(day.getTime())||day.toISOString().slice(0,10)!==date||day.getUTCDay()===1||!times.includes(d.time)||!Number.isInteger(d.people)||d.people<1||d.people>48)return send(400,{error:'Dados inválidos.'});
+ const sql=`WITH free AS (SELECT t.id,t.seats FROM dining_tables t WHERE t.active=1 AND NOT EXISTS(SELECT 1 FROM reservations r,json_each(r.table_ids) j WHERE r.id<>? AND r.date=? AND r.status IN ('pending','approved') AND abs((CAST(substr(r.time,1,2) AS INTEGER)*60+CAST(substr(r.time,4,2) AS INTEGER))-(CAST(substr(?,1,2) AS INTEGER)*60+CAST(substr(?,4,2) AS INTEGER)))<60 AND j.value=t.id)), ranked AS (SELECT id,seats,SUM(seats) OVER (ORDER BY id) cumulative FROM free), chosen AS (SELECT id,seats FROM ranked WHERE cumulative-seats<?) UPDATE reservations SET date=?,time=?,people=?,table_ids=(SELECT json_group_array(id) FROM chosen) WHERE id=? AND status IN ('pending','approved') AND children+babies<? AND (SELECT COALESCE(SUM(seats),0) FROM chosen)>=?`;
+ const r=await env.DB.prepare(sql).bind(d.id,date,d.time,d.time,d.people,date,d.time,d.people,d.id,d.people,d.people).run();if(!r.meta.changes)return send(409,{error:'Reserva indisponível, sem capacidade ou total incompatível com crianças e bebés.'});return send(200,{ok:true});
+ }
+ if(request.method==='POST'&&path==='/admin/tables'){let data;try{data=await request.json()}catch{return send(400,{error:'Pedido inválido.'})}if(!Number.isInteger(data.seats)||data.seats<1||data.seats>20)return send(400,{error:'Capacidade inválida.'});await env.DB.prepare('INSERT INTO dining_tables(seats) VALUES (?)').bind(data.seats).run();return send(201,{ok:true});}
+ if(request.method==='PATCH'&&path==='/admin/bookings'){let data;try{data=await request.json()}catch{return send(400,{error:'Pedido inválido.'})}if(!['approved','rejected','cancelled'].includes(data.status)||typeof data.id!=='string')return send(400,{error:'Estado inválido.'});const previous=data.status==='cancelled'?'approved':'pending';const result=await env.DB.prepare('UPDATE reservations SET status=? WHERE id=? AND status=?').bind(data.status,data.id,previous).run();if(!result.meta.changes)return send(409,{error:'Pedido inexistente ou já alterado.'});return send(200,{ok:true});}
+ if(request.method!=='GET'||path!=='/admin')return send(404,{error:'Não encontrado.'});
  const [bookings,tables]=await env.DB.batch([env.DB.prepare('SELECT * FROM reservations ORDER BY date,time LIMIT 500'),env.DB.prepare('SELECT id,seats FROM dining_tables WHERE active=1 ORDER BY id')]);
  return send(200,{bookings:bookings.results,tables:tables.results});
 }};
