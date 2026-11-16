@@ -18,3 +18,9 @@ Gestão autenticada: cabeçalho Authorization: Bearer ADMIN_TOKEN.
 - POST /admin/tables: {"seats":4}, acrescenta uma mesa interior.
 
 A aprovação não envia SMS/email: o responsável deve contactar o cliente pelo telefone fornecido. Não expor a base de dados. Antes de disponibilizar publicamente, configurar HTTPS, limitação de pedidos no proxy, política de retenção dos dados e autenticação do responsável. GitHub Pages não executa este serviço: é necessário um alojamento Node com disco persistente.
+
+## Painel de gestão (versão de teste)
+
+A página `/gestao/` permite consultar pedidos, aprovar, recusar, cancelar e adicionar mesas. Usa a mesma chave ADMIN_TOKEN definida no servidor; a chave só permanece na memória da página. O painel ainda não oferece autenticação individual, edição de reservas, inserção por telefone, bloqueios de horário ou grelha operacional de ocupação.
+
+Não existe notificação automática por email ou SMS. Antes de usar com clientes reais, implementar autenticação apropriada, proteção contra tentativas de acesso, limitação de pedidos, HTTPS, backups e política de retenção; configurar um fornecedor de email e testar a entrega. Não ativar reservas públicas até estas etapas estarem concluídas.
