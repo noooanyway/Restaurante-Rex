@@ -1,4 +1,4 @@
-/* Furna typography: Lora for identity and headings; DM Sans for reading and controls.
+/* Furna typography: Lora for identity and headings; Source Sans 3 for reading and controls.
    Fonts are self-hosted by next/font, with swap and local fallbacks. */
 body{font-family:var(--font-text),Arial,sans-serif;font-size:16px;font-weight:400;line-height:1.65}
 button,input,select,textarea{font-family:var(--font-text),Arial,sans-serif}
@@ -23,3 +23,65 @@ h1,h2,h3{font-family:var(--font-editorial),Georgia,serif;font-weight:400;text-wr
 .visit-note{font-size:22px;line-height:1.4;letter-spacing:-.02em}.visit-details dt{font-family:var(--font-text),Arial,sans-serif;font-size:12px;font-weight:600;line-height:1.6;letter-spacing:.06em}.visit-details dd{font-size:16px;line-height:1.65}.reservation{font-size:24px;line-height:1.4;letter-spacing:-.02em}
 .footer-line p{font-family:var(--font-text),Arial,sans-serif;font-size:12px;letter-spacing:.06em;line-height:1.7}.credits,.booking-note{font-size:14px;line-height:1.7}.footer-line>a:last-child{font-size:14px}
 @media(max-width:700px){.wordmark{font-size:68px;margin:16px 0}.small-logo{font-size:30px}.opening-line{font-size:22px}.opening-description,.interlude-copy>p{font-size:16px}.menu-heading h2,.booking-section h2,.visit-heading h2,.interlude-copy h2{font-size:34px;line-height:1.2}.menu-category h3{font-size:27px}.menu-category h4{font-size:19px}.menu-category li p{font-size:14px}.visit-details dd{font-size:15px}.topbar nav{gap:8px 22px}.opening-practical{font-size:14px}}
+
+/* Visitor-facing hierarchy: clear identity, generous reading size and compact arrival. */
+.topbar{display:flex;justify-content:space-between;gap:28px;padding:20px 4%;background:var(--paper)}
+.brand{display:inline-flex;align-items:center;gap:22px;flex-shrink:0}
+.brand:hover{text-decoration:none}
+.brand .small-logo{font-size:40px;letter-spacing:-.045em}
+.brand-description{border-left:1px solid var(--line);padding-left:22px;font-size:18px;line-height:1.25;font-weight:500;letter-spacing:0}
+.topbar nav{font-size:17px;gap:30px}
+.topbar nav .nav-reserve{gap:16px;border-bottom:1px solid var(--ink)}
+.palette-control{padding:7px 4%;font-size:14px;background:var(--paper)}
+.palette-control select{min-height:36px;padding:5px 10px}
+.opening{grid-template-columns:1.05fr 1fr}
+.opening-type{padding:48px 8%;display:flex;justify-content:center;align-items:flex-start}
+.wordmark{font-size:clamp(68px,6.5vw,94px);letter-spacing:-.055em;line-height:1.08;margin:16px 0 12px}
+.opening-line{font-family:var(--font-editorial),Georgia,serif;font-size:clamp(24px,2.3vw,32px);line-height:1.35;letter-spacing:-.025em;font-weight:400;margin:0 0 24px}
+.opening-description{font-size:19px;line-height:1.6;max-width:46ch;margin-bottom:24px}
+.opening-practical{font-size:16px;line-height:1.55;margin-bottom:28px;max-width:48ch;border-top:1px solid var(--line);padding-top:20px}
+.opening-practical p+p{margin-top:10px}
+.opening-actions{display:flex;align-items:center;flex-wrap:wrap;gap:18px 24px;width:100%}
+.primary-link,.secondary-link{display:inline-flex;align-items:center;justify-content:space-between;gap:24px;min-height:48px;font-size:17px;font-weight:600}
+.primary-link{background:var(--ink);color:var(--paper);padding:12px 20px;border:1px solid var(--ink)}
+.primary-link:hover{text-decoration:none;opacity:.9}
+.secondary-link{border-bottom:1px solid var(--ink)}
+.opening-photo{height:auto;min-height:540px;align-self:stretch}
+.opening-photo img{position:absolute;inset:0;height:100%;object-position:center 75%}
+.opening-photo figcaption{font-size:12px!important;flex-wrap:wrap}
+.opening-footnote,.opening-index{font-family:var(--font-text),Arial,sans-serif;font-size:15px;line-height:1.5;padding:18px 8%}
+.menu-heading h2,.booking-section h2,.visit-heading h2,.interlude-copy h2{font-size:clamp(32px,3.4vw,46px);line-height:1.2;letter-spacing:-.035em}
+.menu-heading>p,.menu-index-note{font-size:17px;line-height:1.6}
+.menu-category h3{font-size:30px;letter-spacing:-.025em}
+.menu-category h4{font-size:22px;font-weight:600;line-height:1.35;letter-spacing:0}
+.menu-category li p{font-size:17px;line-height:1.6}
+.menu-filters button{font-size:17px}
+.price{font-size:21px;font-weight:600}
+.line-link{font-size:17px;line-height:1.5}
+.booking-section>p,.booking-section form>p{font-size:17px}
+.booking-section label{font-size:17px}
+.booking-section input,.booking-section select,.booking-section textarea{font-size:17px}
+.visit-details dt{font-size:13px}.visit-details dd{font-size:18px}
+.footer-line p{font-size:15px;letter-spacing:.02em}
+@media(max-width:1000px){
+ .topbar{gap:20px}.topbar nav{gap:18px}.brand{gap:14px}.brand-description{padding-left:14px;font-size:16px}
+ .opening-type{padding:36px 7%}.opening-description{font-size:18px}.opening-photo{min-height:520px}
+ .opening-actions{gap:12px 20px}
+}
+@media(max-width:700px){
+ .topbar{display:flex;flex-direction:column;align-items:stretch;padding:20px 5% 8px;gap:14px}
+ .brand{gap:20px}.brand .small-logo{font-size:38px}.brand-description{display:block;font-size:17px;padding-left:20px}
+ .topbar nav{justify-content:space-between;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:6px}
+ .topbar nav a{font-size:16px;min-height:44px}.topbar nav .nav-reserve{gap:6px}
+ .palette-control{padding:8px 5%;font-size:14px;gap:8px}.palette-control select{font-size:14px}
+ .opening{grid-template-columns:1fr}.opening-type{padding:30px 5% 32px}
+ .wordmark{font-size:68px;margin:14px 0 10px}.opening-line{font-size:25px;margin-bottom:18px}
+ .opening-description{font-size:18px;line-height:1.6}.opening-practical{font-size:16px;margin-bottom:24px}
+ .opening-actions{gap:16px 20px}.primary-link,.secondary-link{font-size:16px;gap:16px}
+ .opening-photo{height:300px;min-height:0}.opening-photo img{object-position:center 75%}
+ .opening-footnote,.opening-index{padding:16px 5%;font-size:14px}
+ .menu-category h4{font-size:21px}.menu-category li p{font-size:16px}.price{font-size:19px}
+ .menu-heading{gap:4px}.menu-heading>p{font-size:17px}.menu-category h3{font-size:27px}
+ .visit-details dd{font-size:17px;overflow-wrap:anywhere}
+ .footer-line p{font-size:14px}
+}

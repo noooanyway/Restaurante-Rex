@@ -8,17 +8,16 @@ export default function Home() {
   return <>
     <a href="#conteudo" className="skip-link">Saltar para o conteúdo</a>
     <header className="topbar">
-      <a href="#inicio" className="small-logo" aria-label={`${r.name} — início`}>{r.name}</a>
-      <span className="header-note">RESTAURANTE<br />E ESPLANADA</span>
-      <nav aria-label="Navegação principal" className="flex items-center"><a href="#ementa">Ementa</a><a href="./reservas/">Reservas</a><a href="#galeria">Galeria</a><a href="#contactos">Contactos</a></nav>
+      <a href="#inicio" className="brand" aria-label={`${r.name} — início`}><span className="small-logo">{r.name}</span><span className="brand-description">Restaurante<br />e Esplanada</span></a>
+      <nav aria-label="Navegação principal" className="flex items-center"><a href="#ementa">Ementa</a><a href="./reservas/" className="nav-reserve">Reservas <span aria-hidden="true">↗</span></a><a href="#galeria">Galeria</a><a href="#contactos">Contactos</a></nav>
     </header>
     <PaletteSelector /><main id="conteudo">
       <section className="opening" id="inicio" aria-labelledby="hero-title">
         <div className="opening-type">
-          <p className="eyebrow">RESTAURANTE E ESPLANADA<br />SANTO ANTÓNIO</p>
+          <p className="eyebrow">SANTO ANTÓNIO · À SUA MESA</p>
           <h1 id="hero-title" className="wordmark">{r.name}</h1>
           <p className="opening-line">Restaurante e Esplanada</p>
-          <p className="opening-description">Cozinha contemporânea com ingredientes portugueses, numa sala com 48 lugares e uma esplanada para desfrutar da sua visita.</p><div className="opening-practical"><p>{r.address}</p><p>{r.hours}</p><a href="./reservas/">Informações sobre reservas</a></div><a className="menu-entry" href="#ementa"><span>Sentar.<br />Escolher.</span><span aria-hidden="true">↳</span><span>Ver a ementa</span></a>
+          <p className="opening-description">Cozinha contemporânea com ingredientes portugueses, numa sala com 48 lugares e uma esplanada para desfrutar da sua visita.</p><div className="opening-practical"><p>{r.address}</p><p>{r.hours}</p></div><div className="opening-actions"><a className="primary-link" href="./reservas/">Pedir reserva <span aria-hidden="true">↗</span></a><a className="secondary-link" href="#ementa">Explorar a ementa <span aria-hidden="true">↓</span></a></div>
         </div>
         <figure className="opening-photo">
           <Image src={photos.garden.src} alt={photos.garden.alt} width={1400} height={2100} priority sizes="(max-width: 700px) 100vw, 50vw" />
